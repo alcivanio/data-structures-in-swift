@@ -77,7 +77,7 @@ class AVLTree<T: Comparable> {
         updateRoot()
     }
     
-    private func addValue(_ value: T, inSubtree subtreeRoot: inout Node<T>?) -> Bool {
+    @discardableResult private func addValue(_ value: T, inSubtree subtreeRoot: inout Node<T>?) -> Bool {
         if subtreeRoot == nil {
             subtreeRoot = Node(value: value)
             return true
@@ -87,52 +87,42 @@ class AVLTree<T: Comparable> {
         if value < subtreeRoot!.value {
             if addValue(value, inSubtree: &subtreeRoot!.leftNode) && !subtreeRoot!.isBalanced {
                 subtreeRoot?.leftNode?.parent = subtreeRoot
-                //value < subtreeRoot!.leftNode!.value ? rotateLeft(node: subtreeRoot!) : rotateLeftRight(node: subtreeRoot!)
             }
         } else if value > subtreeRoot!.value {
             if addValue(value, inSubtree: &subtreeRoot!.rightNode) && !subtreeRoot!.isBalanced {
                 subtreeRoot?.rightNode?.parent = subtreeRoot
-                //value > subtreeRoot!.rightNode!.value ? rotateRight(node: subtreeRoot!) : rotateRightLeft(node: subtreeRoot!)
             }
         } else {
             return false
         }
         
-        if subtreeRoot!.isNotBalanced {
-            
-            if subtreeRoot!.balance > 1 {
-                if (subtreeRoot!.leftNode?.balance ?? 0) < 0 {
-                    //rotacao dupla a esquerda
-                    rotateLeftRight(node: subtreeRoot!)
-                } else {
-                    //rotaca a esquerda
-                    rotateLeft(node: subtreeRoot!)
-                }
-                
-            } else {
-                if (subtreeRoot!.rightNode?.balance ?? 0) > 0 {
-                    //rotacao dupla a direita
-                    rotateRightLeft(node: subtreeRoot!)
-                    
-                }else {
-                    rotateRight(node: subtreeRoot!)
-                    //rotacao a direita
-                }
-            }
-            
-        }
+        balanceNodeIfNeeded(subtreeRoot!)
         
         subtreeRoot?.height = max(getNodeHeight(subtreeRoot?.leftNode), getNodeHeight(subtreeRoot?.rightNode)) + 1
         return true
     }
     
+    private func balanceNodeIfNeeded(_ node: Node<T>) {
+        if node.isBalanced { return }
+        if node.balance > 1 {
+            if (node.leftNode?.balance ?? 0) < 0 {
+                rotateLeftRight(node: node)
+            } else {
+                rotateLeft(node: node)
+            }
+        } else {
+            if (node.rightNode?.balance ?? 0) > 0 {
+                rotateRightLeft(node: node)
+                
+            }else {
+                rotateRight(node: node)
+            }
+        }
+    }
+    
     private func updateRoot() {
         if temporaryRoot != nil {
             root = temporaryRoot
-        } else {
-            while root?.parent != nil {
-                root = root?.parent
-            }
         }
     }
     
@@ -200,8 +190,6 @@ class AVLTree<T: Comparable> {
             printNode(rightNode)
         }
     }
-    
-    
 }
 
 
