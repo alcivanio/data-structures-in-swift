@@ -5,7 +5,7 @@ class Node<T: Comparable>: Comparable {
     
     var value: T
     
-    private (set) weak var parent: Node<T>?
+    weak var parent: Node<T>?
     var leftNode: Node<T>?
     var rightNode: Node<T>?
     
@@ -15,7 +15,8 @@ class Node<T: Comparable>: Comparable {
         return (leftNode?.height ?? -1) - (rightNode?.height ?? -1)
     }
     
-    var isBalanced: Bool { return abs(balance) >= 2 }
+    var isBalanced: Bool { return abs(balance) < 2 }
+    var isNotBalanced: Bool { return !isBalanced }
     
     init(value: T) {
         self.value = value
@@ -53,6 +54,7 @@ enum AddOperationStatus {
 class AVLTree<T: Comparable> {
     
     var root: Node<T>?
+    private var temporaryRoot: Node<T>?
     
     func containsValue(_ value: T) -> Node<T>? {
         return searchValue(value, inNode: root)
@@ -72,6 +74,7 @@ class AVLTree<T: Comparable> {
     
     func addValue(_ value: T) {
         addValue(value, inSubtree: &root)
+        updateRoot()
     }
     
     private func addValue(_ value: T, inSubtree subtreeRoot: inout Node<T>?) -> Bool {
@@ -80,42 +83,87 @@ class AVLTree<T: Comparable> {
             return true
         }
         
+        
         if value < subtreeRoot!.value {
             if addValue(value, inSubtree: &subtreeRoot!.leftNode) && !subtreeRoot!.isBalanced {
-                value < subtreeRoot!.leftNode!.value ? rotateLeft(node: subtreeRoot!) : rotateLeftRight(node: subtreeRoot!)
+                subtreeRoot?.leftNode?.parent = subtreeRoot
+                //value < subtreeRoot!.leftNode!.value ? rotateLeft(node: subtreeRoot!) : rotateLeftRight(node: subtreeRoot!)
             }
         } else if value > subtreeRoot!.value {
             if addValue(value, inSubtree: &subtreeRoot!.rightNode) && !subtreeRoot!.isBalanced {
-                value > subtreeRoot!.rightNode!.value ? rotateRight(node: subtreeRoot!) : rotateRightLeft(node: subtreeRoot!)
+                subtreeRoot?.rightNode?.parent = subtreeRoot
+                //value > subtreeRoot!.rightNode!.value ? rotateRight(node: subtreeRoot!) : rotateRightLeft(node: subtreeRoot!)
             }
         } else {
             return false
+        }
+        
+        if subtreeRoot!.isNotBalanced {
+            
+            if subtreeRoot!.balance > 1 {
+                if (subtreeRoot!.leftNode?.balance ?? 0) < 0 {
+                    //rotacao dupla a esquerda
+                    rotateLeftRight(node: subtreeRoot!)
+                } else {
+                    //rotaca a esquerda
+                    rotateLeft(node: subtreeRoot!)
+                }
+                
+            } else {
+                if (subtreeRoot!.rightNode?.balance ?? 0) > 0 {
+                    //rotacao dupla a direita
+                    rotateRightLeft(node: subtreeRoot!)
+                    
+                }else {
+                    rotateRight(node: subtreeRoot!)
+                    //rotacao a direita
+                }
+            }
+            
         }
         
         subtreeRoot?.height = max(getNodeHeight(subtreeRoot?.leftNode), getNodeHeight(subtreeRoot?.rightNode)) + 1
         return true
     }
     
+    private func updateRoot() {
+        if temporaryRoot != nil {
+            root = temporaryRoot
+        } else {
+            while root?.parent != nil {
+                root = root?.parent
+            }
+        }
+    }
+    
     private func rotateLeft(node: Node<T>) {
         let upperNode = node.leftNode
-        node.parent?.replaceNode(node, withNode: upperNode)
+        node.parent == nil ? upperNode?.parent = nil : node.parent?.replaceNode(node, withNode: upperNode)
         
         node.setLeftNode(upperNode?.rightNode)
         upperNode?.setRightNode(node)
         
         node.height = max(getNodeHeight(node.leftNode), getNodeHeight(node.rightNode))
         upperNode?.height = max(getNodeHeight(node.leftNode), node.height) + 1
+        
+        if upperNode?.parent == nil {
+            temporaryRoot = upperNode
+        }
     }
     
     private func rotateRight(node: Node<T>) {
         let upperNode = node.rightNode
-        node.parent?.replaceNode(node, withNode: upperNode)
+        node.parent == nil ? upperNode?.parent = nil : node.parent?.replaceNode(node, withNode: upperNode)
         
         node.setRightNode(upperNode?.leftNode)
         upperNode?.setLeftNode(node)
         
         node.height = max(getNodeHeight(node.leftNode), getNodeHeight(node.rightNode))
         upperNode?.height = max(getNodeHeight(node.rightNode), node.height) + 1
+        
+        if upperNode?.parent == nil {
+            temporaryRoot = upperNode
+        }
     }
     
     private func rotateLeftRight(node: Node<T>) {
@@ -134,6 +182,23 @@ class AVLTree<T: Comparable> {
     
     private func getNodeHeight(_ node: Node<T>?) -> Int {
         return node?.height ?? -1
+    }
+    
+    func printTree() {
+        guard let root = root else { return }
+        printNode(root)
+        print("")
+    }
+    
+    private func printNode(_ node: Node<T>) {
+        print(node.value, terminator: " ")
+        if let leftNode = node.leftNode {
+            printNode(leftNode)
+        }
+        
+        if let rightNode = node.rightNode {
+            printNode(rightNode)
+        }
     }
     
     
