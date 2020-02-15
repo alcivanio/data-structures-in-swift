@@ -5,14 +5,10 @@ import UIKit
 class Heap<T: Comparable> {
     
     var capacity: Int = 10
-    var count: Int = 0
-    var isEmpty: Bool { return count == 0 }
+    var count: Int { items.count }
+    var isEmpty: Bool { return items.isEmpty }
     
-    var items: [T?]
-    
-    init() {
-        items = Array(repeating: nil, count: capacity)
-    }
+    var items: [T] = []
     
     private func getParentIndex(_ index: Int) -> Int { return (index - 1) / 2 }
     private func getLeftChildIndex(_ index: Int) -> Int { return 2 * index + 1 }
@@ -22,16 +18,10 @@ class Heap<T: Comparable> {
     private func hasLeftChild(_ index: Int) -> Bool { return getLeftChildIndex(index) < count }
     private func hasRightChild(_ index: Int) -> Bool { return getRightChildIndex(index) < count }
     
-    private func parent(_ index: Int) -> T { return items[getParentIndex(index)]! }
-    private func leftChild(_ index: Int) -> T { return items[getLeftChildIndex(index)]! }
-    private func rightChild(_ index: Int) -> T { return items[getRightChildIndex(index)]! }
+    private func parent(_ index: Int) -> T { return items[getParentIndex(index)] }
+    private func leftChild(_ index: Int) -> T { return items[getLeftChildIndex(index)] }
+    private func rightChild(_ index: Int) -> T { return items[getRightChildIndex(index)] }
     
-    private func ensureExtraCapacity() {
-        if capacity == count {
-            items.append(contentsOf: Array(repeating: nil, count: capacity))
-            capacity = capacity * 2
-        }
-    }
     
     public func peek() -> T? {
         return items[0]
@@ -40,22 +30,19 @@ class Heap<T: Comparable> {
     public func poll() -> T? {
         if count == 0 { return nil }
         let item = items[0]
-        items[0] = items[count-1]
-        count+=1
+        items[0] = items.removeLast()
         heapifyDown()
         return item
     }
     
     public func add(_ item: T) {
-        ensureExtraCapacity()
-        items[count] = item
-        count+=1
+        items.append(item)
         heapifyUp()
     }
     
     public func printHeap() {
         for i in 0..<count {
-            print("\(items[i]!)", terminator: " ")
+            print("\(items[i])", terminator: " ")
         }
         print("")
     }
@@ -63,7 +50,7 @@ class Heap<T: Comparable> {
     private func heapifyUp() {
         if isEmpty { return }
         var index = count - 1
-        while hasParent(index) && parent(index) > items[index]! {
+        while hasParent(index) && parent(index) > items[index] {
             items.swapAt(index, getParentIndex(index))
             index = getParentIndex(index)
         }
@@ -80,7 +67,7 @@ class Heap<T: Comparable> {
                 smallestChildIndex = getRightChildIndex(index)
             }
             
-            if items[index]! < items[smallestChildIndex]! { break }
+            if items[index] < items[smallestChildIndex] { break }
             
             items.swapAt(index, smallestChildIndex)
             index = smallestChildIndex
