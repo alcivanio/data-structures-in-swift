@@ -68,6 +68,21 @@ class HashTable<T> {
         return nil
     }
     
+    // get key
+    func keys() -> [String] {
+        var node: HashTableNode<T>?
+        var keysArray = [String]()
+        
+        for i in 0..<bucket.count {
+            node = bucket[i]
+            if node?.key != nil {
+                keysArray.append(node!.key)
+            }
+        }
+        
+        return keysArray
+    }
+    
     //best case O(1), worst case O(n)
     func deleteElementForKey(_ key: String) -> Bool {
         let index = findIndex(forKey: key)
